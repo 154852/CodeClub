@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Fly!</title>
+        <meta charset="utf-8" />
+        <link href="index.css" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" />
+        <script src="https://threejs.org/build/three.min.js"></script>
+        <script src="planes.js"></script>
+        <script src="orbitControls.js"></script>
+    </head>
+    <body>
+        <h1 id="title">Jet Rush</h1>
+        <div id="plane" class="section">
+            <h2>Plane</h2>
+            <h3>Plane model:</h3>
+            <table id="planemodelwrapper">
+                <tr>
+                    <td>
+                        <svg width="20" height="20" class="arrowsvg inverse"><polygon id="planemodeldec" points="0,0 0,20 20,10" /></svg>
+                    </td>
+                    <td>
+                        <p id="planemodel">X-15</p>
+                    </td>
+                    <td>
+                        <svg width="20" height="20" class="arrowsvg"><polygon id="planemodelinc" points="0,0 0,20 20,10" /></svg>
+                    </td>
+                </tr>
+            </table>
+            <div id="canvaswrapper"></div>
+            <div id="stats">
+                <h3>Speed: </h3>
+                <div class="graphslider" id="speed">
+                    <div class="graphsliderinner"></div>
+                </div>
+                <br />
+                <h3>Handling: </h3>
+                <div class="graphslider" id="handling">
+                    <div class="graphsliderinner"></div>
+                </div>
+            </div>
+        </div>
+        <div id="centerline"></div>
+        <div id="world" class="section">
+            <h2>World</h2>
+            
+            <h3>World Generation Algorithm:</h3>
+            <table id="worldtypewrapper">
+                <tr>
+                    <td>
+                        <svg width="20" height="20" class="arrowsvg inverse"><polygon id="worldtypedec" points="0,0 0,20 20,10" /></svg>
+                    </td>
+                    <td>
+                        <p id="worldtype">Diamond-Square</p>
+                    </td>
+                    <td>
+                        <svg width="20" height="20" class="arrowsvg"><polygon id="worldtypeinc" points="0,0 0,20 20,10" /></svg>
+                    </td>
+                </tr>
+            </table>
+
+            <h3 style="margin-top: 0.5%;">World Seed: <span id="seedwarning">Seeds can only be used with noise based terrain generation</span></h3>
+            <input type="text" placeholder="leave blank for a random seed" id="seed" />
+            
+            <h3>Water Level:</h3>
+            <input type="range" min="-50" value="0" max="50" id="waterheight"/><span id="waterheightlabel">0</span>
+            
+            <h3 style="padding-top: 0.5em">World Height Range:</h3>
+            <input type="range" min="0" value="20" max="50" id="worldrange"/><span id="worldrangelabel">20</span>
+        </div>
+        <div id="gowrapper">
+            <div id="gobutton">
+                <h2>Fly!</h2>
+            </div>
+        </div>
+        <script src="index.js"></script>
+    </body>
+</html>

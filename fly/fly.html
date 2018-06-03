@@ -1,0 +1,135 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Coding Club</title>
+        <meta charset="utf-8" />
+        <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet" />
+        <script src="https://threejs.org/build/three.min.js"></script>
+        <script src="keyInput.js"></script>
+        <script src="grid.js"></script>
+        <script src="terrain.js"></script>
+        <script src="chunkLoader.js"></script>
+        <script src="terrainGen/terrainGenerator.js"></script>
+        <script src="terrainGen/noiseGenerator.js"></script> 
+        <script src="terrainGen/perlin.js"></script>
+        <script src="terrainGen/perlinGenerator.js"></script>
+        <script src="../planes.js"></script>
+        <script src="commandParser.js"></script>
+        <link href="fly.css" rel="stylesheet" />
+        <script type="x-shader/x-vertex" id="vertexShader">
+            attribute float height;
+            varying float vHeight;
+
+            void main() {
+                vHeight = height;
+
+                vec3 newPos = position + vec3(0.0, 0.0, height);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(newPos, 1.0);
+            }
+        </script>
+
+        <script type="x-shader/x-fragment" id="fragmentShader">
+            varying float vHeight;
+
+            uniform vec3 start;
+            uniform vec3 end;
+            uniform float range;
+
+            uniform float waterHeight;
+            uniform vec3 waterColor;
+
+            void main() {
+                float pc = (vHeight + 1.0) * (1.0 / range);
+                vec3 color = vec3(start.x + ((end.x - start.x) * pc), start.y + ((end.y - start.y) * pc), start.z + ((end.z - start.z) * pc));
+
+                if (vHeight < waterHeight) {
+                    vec3 waterColor = vec3(93.0 / 255.0, 173.0 / 255.0, 226.0 / 255.0);
+                    color.x += (waterColor.x - color.x) * 0.55;
+                    color.y += (waterColor.y - color.y) * 0.55;
+                    color.z += (waterColor.z - color.z) * 0.55;
+                }
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        </script>
+    </head>
+    <body>
+        <div id="throttle">
+            <p id="throttlepc">0%</p>
+        </div>
+
+        <div id="topleft">
+            <div id="miniMap">
+                <p id="north">N</p>
+            </div>
+            <div id="coords">
+                <p>X: <span id="xCoord">0</span> Y: <span id="yCoord">0</span></p>
+            </div>
+        </div>
+        <svg id="centerdot" width="10" height="30">
+            <polyline points="0,5 10,5"></polyline>
+            <polyline points="5,0 5,10"></polyline>
+            <polygon points="5,30 10,20 0,20"></polygon>
+        </svg>
+        <p id="below">Controls and hacking below!</p>
+        <div id="commandView">
+            <div id="pastCommands">
+            </div>
+            <input type="text" id="command" />
+        </div>
+
+        <script src="main.js"></script>
+        <h2>Controls</h2>
+        <ul>
+            <li>Press <code>shift</code> to push <b>up</b> the throttle</li>
+            <li>Press <code>ctrl</code> to push <b>down</b> the throttle</li>
+            <li>Use <code>W</code> and <code>S</code> to rotate on the <b>pitch</b> axis (turn up and down)</li>
+            <li>Use <code>A</code> and <code>D</code> to rotate on the <b>roll</b> axis (left and right)</li>
+            <li>Press <code>/</code> to open the commands console and then <code>esc</code> to leave it</li>
+        </ul>
+
+        <h2>Commands</h2>
+        <p class="padded"><code>[datatype]</code> = data in the form of that datatype, <code>{}</code> means optional, <code>|</code> means or, <code><em><u>anything</u></em></code> means defaut</p>
+        <ul>
+            <li><code>/echo <span style="color: #E91E63">[anything]</span></code> to have [anything] repeated back to you</li>
+            <li><code>/goto <span style="color: #E91E63">[float] [float] {[float]}</span></code> to teleport to x,y,z if the last number is given is given, otherwise x,0,z</li>
+            <li><code>/reset</code> to reset (reload) the page</li>
+            <li><code>/set plane <span style="color: #E91E63">[int (0 - 2)]</span> | water <span style="color: #E91E63">[int]</span></code> to set the plane type or water height</li>
+            <li><code>/toggle <span style="color: #E91E63">[string (map | position | throttle | all)]</span></code> to show / hide that UI element</li>
+            <li><code>/rotation</code> to get the plane rotation as x,y,z in degrees</li>
+            <li><code>/clear</code> to clear the command console</li>
+            <li><code>/rotate <span style="color: #E91E63">[float] [float] [float]</span></code> to rotate to the given numbers in x,y,z format</li>
+            <li><code>/autopilot <span style="color: #E91E63">{[float] [float] [float]}</span></code> to toggle autopilot flying by default at the given angle</li>
+            <li><code>/height <span style="color: #E91E63">{[string (<u>false</u> | true)]}</span></code> to get the height of the ground below if true, else to get the height of the plane</li>
+            <li>Or just some javascript (without a /) to execute that code</li>
+        </ul>
+
+        <h2>Hacking :)</h2>
+        <ul>
+            <li>The query string at the top (the bit after the <code>?</code>) can be modified like so:
+                <ul>
+                    <li>The <code>p</code> attribute determines the plane: 0 is the X-15, 1 is the Boeing 777 etc</li>
+                    <li>The <code>a</code> attribute is the terrain generation algorithm used: 0 is Diamond-Square, 1 is Perlin etc...</li>
+                    <li>The <code>w</code> attribute is the height that the water is at</li>
+                    <li>The <code>r</code> attribute is the range of the terrain generated, so 20 is between -20 and +20</li>                    
+                </ul>
+            </li>
+            <li>In the console you can do the following:
+                <ul>
+                    <li><code>stats.speed = <span style="color: #E91E63">[int]</span></code> is the speed of the plane at 100%, the higher the faster, negative is backwards etc</li>
+                    <li><code>stats.handling = <span style="color: #E91E63">[int]</span></code> is the handling of the plane - usually, although not restrictd to, a number from 0 to 1</li>
+                    <li><code>waterHeight = <span style="color: #E91E63">[int]</span></code> the height of the water</li>                    
+                    <li><code>camera.position.set(<span style="color: #E91E63">[int]</span>, <span style="color: #E91E63">[int]</span>, <span style="color: #E91E63">[int]</span>)</code> sets the player position as x,y,z</li>
+                    <li><code>waterPlaneMaterial.color.set(0x<span style="color: #E91E63">[int (hex)]</span>)</code> set the color of the water</li>
+                    <li><code>chunkLoader.loaded = []</code> deletes all chunks without removing the from the scene therefore meaning mountains</li>
+                </ul>
+            </li>
+        </ul>
+        <a href="../index.html" style="padding-left: 1em; padding-bottom: 1em;">Back to home</a>
+    </body>
+    <script>
+        setTimeout(function() {
+            document.getElementById('below').style.opacity = '0';
+        }, 3000);
+    </script>
+</html>

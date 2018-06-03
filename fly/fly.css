@@ -1,0 +1,154 @@
+body {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;          
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+}
+
+#miniMap {
+    width: 100%;
+    height: 15vw;
+
+    border-radius: 7.5vw;
+    overflow: hidden;
+}
+
+#miniMap canvas {
+    position: absolute;
+    top: 0;
+    border-radius: 7.5vw;
+    overflow: hidden;
+    border: solid black 1px;
+}
+
+#topleft {
+    z-index: 0;
+
+    position: absolute;
+    top: 1vw;
+    right: 1vw;
+    width: 15vw;
+}
+
+#north {
+    color: white;
+    z-index: 10;
+    width: 100%;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    background: black;
+}
+
+#throttle {
+    position: absolute;
+    width: 4vw;
+    bottom: 1vw;
+    left: 1vw;
+    background-color: #F44336;
+}
+
+#throttlepc {
+    color: white;
+    position: absolute;
+    text-align: center;
+    
+    bottom: -0.5vw;    
+    width: 4vw;
+}
+
+#centerdot {
+    position: absolute;
+    top: 8.25vw;
+    right: 8.25vw;
+    z-index: 2;
+
+    stroke: black;
+    transform-origin: 50% 15%;
+}
+
+#coords {
+    text-align: center;
+}
+
+code {
+    background-color: gainsboro;
+    border-radius: 1em;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+h2 {
+    padding-left: 0.5em;
+}
+
+.padded {
+    padding-left: 1em;
+}
+
+#below {
+    position: absolute;
+    bottom: 0;
+    right: 1.5em;
+    font-weight: 800;
+
+    transition: 0.5s;
+    -webkit-transition: 0.5s;
+}
+
+#commandView {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(104, 104, 104);
+    z-index: 10;
+    opacity: 0;
+}
+
+#command, #pastCommands {
+    width: 80%;
+    margin-left: 10%;
+    color: white;
+}
+
+#pastCommands {
+    padding-top: 0.5em;
+    height: 80vh;
+    overflow: scroll;
+}
+
+#command {
+    padding-top: 1em;
+}
+
+input[type="text"] {
+    background-color: rgba(0, 0, 0, 0);
+    border: solid rgba(0, 0, 0, 0) 1px;
+    border-bottom: solid rgb(129, 129, 129) 1px;
+    outline: none;
+    caret-color: white;
+
+    padding-bottom: 0.5em;
+    padding-top: 0.5em;
+
+    transition: 0.5s;
+    -webkit-transition: 0.5s;
+
+    font-family: inherit;
+    font-size: inherit;
+}
+
+input[type="text"]:focus {
+    border-bottom: solid white 1px;
+}
