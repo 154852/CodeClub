@@ -7,7 +7,7 @@
         <script src="https://threejs.org/build/three.min.js"></script>
         <script src="keyInput.js"></script>
         <script src="grid.js"></script>
-        <script src="terrain.js"></script>
+        <script src="terrainGen/chunk.js"></script>
         <script src="chunkLoader.js"></script>
         <script src="terrainGen/terrainGenerator.js"></script>
         <script src="terrainGen/noiseGenerator.js"></script> 
@@ -43,10 +43,10 @@
                 vec3 color = vec3(start.x + ((end.x - start.x) * pc), start.y + ((end.y - start.y) * pc), start.z + ((end.z - start.z) * pc));
 
                 if (vHeight < waterHeight) {
-                    vec3 waterColor = vec3(93.0 / 255.0, 173.0 / 255.0, 226.0 / 255.0);
-                    color.x += (waterColor.x - color.x) * 0.55;
-                    color.y += (waterColor.y - color.y) * 0.55;
-                    color.z += (waterColor.z - color.z) * 0.55;
+                    vec3 waterColor = vec3(0.36470588235, 0.67843137254, 0.8862745098);
+                    color.x += (waterColor.x - color.x) * 0.6;
+                    color.y += (waterColor.y - color.y) * 0.6;
+                    color.z += (waterColor.z - color.z) * 0.6;
                 }
 
                 gl_FragColor = vec4(color, 1.0);

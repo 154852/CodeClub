@@ -35,7 +35,7 @@ body {
 #centerline {
     background-color: gray;
     width: 1px;
-    height: 80vh;
+    height: 78vh;
 }
 
 #gowrapper {
@@ -97,7 +97,7 @@ body {
 
 input[type="text"] {
     outline: none;
-    box-shadow: none;
+    -webkit-appearance: none;
     border: solid white 1px;
     font-size: inherit;
 
@@ -168,7 +168,7 @@ input[type="range"]::-moz-range-thumb {
 
 .graphslider {
     height: 1em;
-    width: 50%;
+    width: 45%;
     background-color: #d3d3d3;
     display: inline-block;
 }
@@ -185,8 +185,9 @@ input[type="range"]::-moz-range-thumb {
 #stats h3 {
     padding-left: 0;
     display: inline-block;
-    width: 9vw;
-    text-align: center;
+    width: 10vw;
+    text-align: left;
+    padding-right: 0.5em;
 }
 
 #seedwarning {

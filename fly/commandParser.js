@@ -22,7 +22,7 @@ class CommandParser {
             if (command.name == name && command.regex.test(regex)) {
                 try {
                     return command.callback(params);
-                } catch {
+                } catch (Exception){
                     return 'ERROR: Command callback error'
                 }
             }

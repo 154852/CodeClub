@@ -1,3 +1,4 @@
+//This lets us get information after the ? in the web-address
 function getParameterByName(name) {
     name = name.replace(/[\[\]]/g, "\\$&");
     var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
@@ -7,19 +8,17 @@ function getParameterByName(name) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
-Math.map = function(no, min, max, nmin, nmax) {
-    var pc = (no - min) / (max - min);
-    return nmin + ((nmax - nmin) * pc);
-}
-
+//This is like normal % execept it rolls over backwards as well
 Number.prototype.mod = function(n) {
-	return ((this%n)+n)%n;
+	return ((this % n) + n) % n;
 };
 
+//This turns a number in radians to a number in degrees
 Math.degrees = function(angle) {
     return angle * (180 / Math.PI);
 }
 
+//This takes a hexadecimal integer and returns a vec3 that is the RGB equivalent
 function hexToRgb(hex) {
     var r = (hex >> 16) & 255;
     var g = (hex >> 8) & 255;
@@ -36,9 +35,11 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
+//#miniMap is the map in the top right corner of the screen
 var mapParent = document.getElementById('miniMap');
 var mapSize = mapParent.getBoundingClientRect();
 
+//Use an orthopathic camera for the map - this has no perspective
 var mapCamera = new THREE.OrthographicCamera(mapSize.width / - 0.5, mapSize.width / 0.5, mapSize.height / 0.5, mapSize.height / - 0.5, 1, 1500);
 var mapRenderer = new THREE.WebGLRenderer();
 mapRenderer.setSize(mapSize.width, mapSize.height);
@@ -47,14 +48,20 @@ mapCamera.rotation.set(-Math.PI / 2, 0, 0)
 
 var waterColor = 0x5DADE2;
 
+//Create the plane that is the water although this is only visable from underneath
 var waterPlaneGeom = new THREE.PlaneGeometry(2000, 2000, 1, 1);
 var waterPlaneMaterial = new THREE.MeshBasicMaterial( {color: waterColor, side: THREE.FrontSide, transparent: true, opacity: 0.55} );
 var waterPlane = new THREE.Mesh(waterPlaneGeom, waterPlaneMaterial);
 scene.add(waterPlane);
 waterPlane.rotation.x = Math.PI / 2;
 
+//Get the worldGenRange and the world seed (if there is one)
 var worldRange = parseInt(getParameterByName('r'));
 var seed = getParameterByName('s');
+
+var waterHeight = parseInt(getParameterByName('w'));
+camera.position.y = waterHeight + worldRange + 40; //Give the camera some room above
+camera.rotation.x = -0.29;
 
 var gen = null;
 switch (parseInt(getParameterByName('a'))) {
@@ -69,10 +76,7 @@ switch (parseInt(getParameterByName('a'))) {
         break;
 }
 
-var waterHeight = parseInt(getParameterByName('w'));
-camera.position.y = waterHeight + worldRange + 40;
-camera.rotation.x = -0.29;
-
+//Create the chunkloader instance, this holds all information required to create a chunk
 var chunkLoader = new ChunkLoader(4, 33, 33, worldRange, 330, 330, gen, waterHeight, hexToRgb(waterColor));
 
 var keyInput = new KeyInput();
@@ -80,6 +84,8 @@ var keyInput = new KeyInput();
 var stats = models[parseInt(getParameterByName('p'))].stats;
 var cameraLocalRotation = new THREE.Vector2(-0.29, 0);
 var velocity = 0;
+
+//Every update check for key presses etc to rotate the camera, change velocity etc
 function updateControls() {
     var velocityInc = 0;
     if (keyInput.isKeyPressed(16)) { //Shift
@@ -88,15 +94,23 @@ function updateControls() {
     if (keyInput.isKeyPressed(17)) { //Ctrl
         velocityInc -= 0.01;
     }
+
+    //Limit the velocity to be from 0 to 1...
     velocity = Math.min(1, Math.max(0, velocity + velocityInc));
+    //...This is then multiplied by the speed in MPH and applied to the camera to move it forward in the direction it is looking
     camera.translateZ(-velocity * stats.speed * 0.001);
     
+    //Update the throttle graphics
     document.getElementById('throttle').style.height = (velocity * (window.innerHeight / 3.5)) + 'px';
     document.getElementById('throttlepc').innerHTML = Math.round(velocity * 100) + '%';
 
-    var rotateInc = new THREE.Vector2();
-    if (autopilot) updateAutoPilot(rotateInc);
-    else {
+    var rotateInc = new THREE.Vector2(); //Shorthand for 'Rotation Increment'
+    if (autopilot) {
+        //Break autopilot if any of the control keys are pressed
+        if (keyInput.isKeyPressed('w|a|s|d')) autopilot = null;
+        //rotateInc can be passed without expecting a return value as it is an object, not an integer allowings its attributes to be modified
+        else autopilot.updateRotationIncrement(rotateInc, camera.rotation, camera.position, getBelow(camera.position.x, camera.position.z));
+    } else {
         if (keyInput.isKeyPressed('w')) {
             rotateInc.x -= 0.03;
         }
@@ -111,17 +125,22 @@ function updateControls() {
         }
     }
     
+    //Apply the new rotation with the handling capabilities added and the velocity
     rotateInc.x *= stats.handling * velocity;
     rotateInc.y *= stats.handling * velocity;
+
+    //Apply the rotation but in --> LOCAL <--- space. Local is important
     camera.rotateX(rotateInc.x);
     camera.rotateZ(rotateInc.y);
 }
 
-var commandInput = document.getElementById('command');
-var selected = 0;
+var commandInput = document.getElementById('command'); //The textfield with the given command in it
+var selected = 0; //Used for going up and down in your history of commands
 var autopilot = false;
+
+//Define the default commands
 var commandParser = new CommandParser([
-    new Command('echo', /.*/, function(parts) {
+    new Command('echo', /.*/, function(parts) { //Simple tester
         return parts.join(' ');
     }),
     new Command('goto', /[0-9\.]+ [0-9\.]+|[0-9\.]+ [0-9\.]+ [\.0-9]*/, function(parts) {
@@ -187,35 +206,13 @@ var commandParser = new CommandParser([
     new Command('clear', /.*/, function(parts) {
         document.getElementById('pastCommands').innerHTML = '';
     }),
-    new Command('autopilot', /$|[0-9]+ [0-9]+ [0-9]+/, function(parts) {
-        if (autopilot) {
-            autopilot = false;
-            return 'Auto pilot disengaged';
-        }
-        
-        if (parts[0]) {
-            camera.rotation.set(parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2]));
-        } else {
-            camera.rotation.set(0, 0, 0);
-        }
-        autopilot = true;
-        return 'Auto pilot engaged';
-    }),
     new Command('height', /$|true|false/, function(parts) {
         if (parts[0] == 'true') return getBelow(camera.position.x, camera.position.z);
         return camera.position.y - waterHeight;
     })
 ]);
 
-function updateAutoPilot(rotateInc) {
-    var below = getBelow(camera.position.x, camera.position.z);
-    var dist = camera.position.y - below;
-    
-    if (dist < 50 + worldRange) rotateInc.x += Math.min(0.0005 * Math.abs(dist), 0.005);
-    else if (dist > 100 + worldRange) rotateInc.x -= Math.min(0.0005 * dist, 0.005);
-}
-
-var commandMenu = false;
+var commandMenu = false; //Stores wether of not the command UI is open
 function showCommandMenu() {
     commandMenu = true;
     document.getElementById('commandView').setAttribute('style', 'opacity: 0.5');
@@ -235,6 +232,7 @@ function setSelected(selected, past) {
     window.event.preventDefault();
 }
 
+//Listens for arrow key presses (for navigating command history) and pressing enter to execute the command
 commandInput.addEventListener('keyup', function(event) {
     var pastCommandsDiv = document.getElementById('pastCommands');
     var past = document.getElementById('pastCommands').getElementsByClassName('command');
@@ -256,6 +254,7 @@ commandInput.addEventListener('keyup', function(event) {
     }
 });
 
+//Function used to get the height of the terrain at the players position
 function getBelow(x, y) {
     var playerChunkX = Math.ceil(x / chunkLoader.graphicalWidth);
     var playerChunkZ = Math.ceil(y / chunkLoader.graphicalHeight);
@@ -272,36 +271,45 @@ function getBelow(x, y) {
     return Math.max(height, 0);
 }
 
-var direction = new THREE.Vector3();
+var direction = new THREE.Vector3(); //Used for calculating world rotations
 var update = function() {
-    if (keyInput.isKeyPressed(191) && !commandMenu) {
+    if (keyInput.isKeyPressed(191) && !commandMenu) { // '/'
         showCommandMenu();
-    } else if (keyInput.isKeyPressed(27) && commandMenu) {
+    } else if (keyInput.isKeyPressed(27) && commandMenu) { // esc
         hideCommandMenu();
     }
     if (!commandMenu) {
         updateControls();    
     }
 
+    //Move the water base and map inline with the player
     waterPlane.position.set(camera.position.x, waterHeight, camera.position.z);
     mapCamera.position.set(camera.position.x, 1300, camera.position.z);
+
+    //Update the coordinate graphics
     document.getElementById('xCoord').innerText = Math.round(camera.position.x);
     document.getElementById('yCoord').innerText = Math.round(camera.position.z);
 
-
+    //Get the world rotation of the camera - easier said than done, and display it on the map
     camera.getWorldDirection(direction);
     document.getElementById('centerdot').style.transform = 'rotate(' + -Math.atan2(direction.x, direction.z) + 'rad)';
 
+    //Get all added chunks and append them to the world, in the process hide any unwanted chunks
     var toAdd = chunkLoader.update(camera.position.x, camera.position.z);
     toAdd.forEach(function(item) {
         scene.add(item);
     });
 
+    //Render the main scene as well as the map
     renderer.render(scene, camera);
     mapRenderer.render(scene, mapCamera);
+
+    //Repeat the function
     requestAnimationFrame(update);
 };
 
+//Set the background of the scene to be sky coloured
 scene.background = new THREE.Color(0xBEEBFF);
 
+//Start the loop and in extension the game
 update();
